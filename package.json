@@ -1,0 +1,31 @@
+{
+  "name": "@c3cbot/bootstrap",
+  "version": "1.0.0-beta.1",
+  "description": "C3CBot (NOCOM-based) installer/runtime.",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/c3cbot/c3cbot.git"
+  },
+  "keywords": [
+    "c3cbot",
+    "c3c",
+    "bot",
+    "facebook",
+    "chat"
+  ],
+  "author": "BadAimWeeb",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/c3cbot/c3cbot/issues"
+  },
+  "homepage": "https://github.com/c3cbot/c3cbot#readme",
+  "devDependencies": {
+    "@tsconfig/node18": "^1.0.1",
+    "@types/node": "^18.7.18",
+    "typescript": "^4.8.3"
+  }
+}
