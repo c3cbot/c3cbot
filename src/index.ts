@@ -559,8 +559,9 @@ async function installKernel(profileURL: string, kernelMetadata: SourceMetadata)
 }
 
 async function installModule(profileURL: string, moduleName: string, moduleMetadata: SourceMetadata) {
-    let tempPath = path.join(os.tmpdir(), "installer_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+    let tempPath = path.join(profileURL, "temp", "installer_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
     console.log(`[i] Installing module ${moduleName}...`);
+    await fs.mkdir(tempPath);
     switch (moduleMetadata.mode) {
         case "git":
             console.log(`[i] Cloning ${moduleName} from ${moduleMetadata.url} at ${moduleMetadata.commit}...`);
@@ -610,8 +611,9 @@ async function installModule(profileURL: string, moduleName: string, moduleMetad
 }
 
 async function installPlugin(profileURL: string, pluginName: string, pluginMetadata: SourceMetadata) {
-    let tempPath = path.join(os.tmpdir(), "installer_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+    let tempPath = path.join(profileURL, "temp", "installer_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
     console.log(`[i] Installing plugin ${pluginName}...`);
+    await fs.mkdir(tempPath);
     switch (pluginMetadata.mode) {
         case "git":
             console.log(`[i] Cloning ${pluginName} from ${pluginMetadata.url} at ${pluginMetadata.commit}...`);
