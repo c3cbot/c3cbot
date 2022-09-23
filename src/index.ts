@@ -7,7 +7,7 @@ import { createInterface } from "node:readline";
 import crypto from "node:crypto";
 import AdmZip from "adm-zip";
 import * as Git from "isomorphic-git";
-import GitHTTP from 'isomorphic-git/http/node';
+import GitHTTP from 'isomorphic-git/http/node/index.js';
 import { Command, Option } from "commander";
 import { exec as execCB, fork } from "node:child_process";
 import { promisify } from "node:util";
