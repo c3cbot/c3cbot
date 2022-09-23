@@ -533,7 +533,7 @@ async function installKernel(profileURL: string, kernelMetadata: SourceMetadata)
         case "git":
             console.log(`[i] Cloning kernel from ${kernelMetadata.url} at ${kernelMetadata.commit}...`);
             await Git.clone({
-                fs,
+                fs: fsSync,
                 http: GitHTTP,
                 dir: kernelPath,
                 url: kernelMetadata.url,
@@ -566,7 +566,7 @@ async function installModule(profileURL: string, moduleName: string, moduleMetad
         case "git":
             console.log(`[i] Cloning ${moduleName} from ${moduleMetadata.url} at ${moduleMetadata.commit}...`);
             await Git.clone({
-                fs,
+                fs: fsSync,
                 http: GitHTTP,
                 dir: tempPath,
                 url: moduleMetadata.url,
@@ -618,7 +618,7 @@ async function installPlugin(profileURL: string, pluginName: string, pluginMetad
         case "git":
             console.log(`[i] Cloning ${pluginName} from ${pluginMetadata.url} at ${pluginMetadata.commit}...`);
             await Git.clone({
-                fs,
+                fs: fsSync,
                 http: GitHTTP,
                 dir: tempPath,
                 url: pluginMetadata.url,
