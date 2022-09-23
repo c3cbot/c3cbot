@@ -9,18 +9,24 @@ import AdmZip from "adm-zip";
 import * as Git from "isomorphic-git";
 import GitHTTP from 'isomorphic-git/http/node';
 import { Command, Option } from "commander";
-import { exec as execCB } from "node:child_process";
+import { exec as execCB, fork } from "node:child_process";
 import { promisify } from "node:util";
 const exec = promisify(execCB);
 
-type ModuleMetadata = {
+type SourceMetadata = {
     mode: "git",
     url: string,
     commit: string
 };
 
+const KERNEL: SourceMetadata = {
+    mode: "git",
+    url: "https://github.com/NOCOM-BOT/core.git",
+    commit: "c9f099381895e18ee20359e9c93870767e137d13"
+}
+
 const MODULE_TABLE: {
-    [x: string]: ModuleMetadata
+    [x: string]: SourceMetadata
 } = {
     mod_telegram: {
         mode: "git",
@@ -51,6 +57,16 @@ const MODULE_TABLE: {
         mode: "git",
         url: "https://github.com/NOCOM-BOT/mod_command_handler.git",
         commit: "9e3df08dcf313f38ba529481aea0b0e118e246d7"
+    }
+}
+
+const PLUGIN_TABLE: {
+    [x: string]: SourceMetadata
+} = {
+    C3CBotInternal: {
+        mode: "git",
+        url: "https://github.com/c3cbot/c3cbot_internal_plugin.git",
+        commit: "ceb1a7ed8950a6c7e718ea6a2c45ff8e7adaf51e"
     }
 }
 
@@ -117,6 +133,12 @@ if (!fsSync.existsSync(dataPath)) {
 const tempPath = path.join(profilePath, "temp");
 if (!fsSync.existsSync(tempPath)) {
     await fs.mkdir(tempPath);
+}
+
+// Create kernel directory if it doesn't exist
+const kernelPath = path.join(profilePath, "kernel");
+if (!fsSync.existsSync(kernelPath)) {
+    await fs.mkdir(kernelPath);
 }
 
 // Test config.json
@@ -450,7 +472,7 @@ for (let moduleName in MODULE_TABLE) {
         let zip = new AdmZip(modulePath);
         let installerVersion = zip.readAsText("INSTALLER_VERSION").trim();
         if (installerVersion !== MODULE_TABLE[moduleName].commit) {
-            console.log(`[i] Mismatched version on ${moduleName}, updating...`);
+            console.log(`[i] Mismatched version on module ${moduleName}, updating...`);
             await installModule(profilePath, moduleName, MODULE_TABLE[moduleName]);
         }
     } else {
@@ -458,7 +480,75 @@ for (let moduleName in MODULE_TABLE) {
     }
 }
 
-async function installModule(profileURL: string, moduleName: string, moduleMetadata: ModuleMetadata) {
+// Test if plugin is installed or outdated, and install/update if necessary
+for (let pluginName in PLUGIN_TABLE) {
+    let pluginPath = path.join(profilePath, "plugins", pluginName + ".zip");
+
+    if (PLUGIN_TABLE[pluginName].mode === "git") {
+        let zip = new AdmZip(pluginPath);
+        let installerVersion = zip.readAsText("INSTALLER_VERSION").trim();
+        if (installerVersion !== PLUGIN_TABLE[pluginName].commit) {
+            console.log(`[i] Mismatched version on plugin ${pluginName}, updating...`);
+            await installPlugin(profilePath, pluginName, PLUGIN_TABLE[pluginName]);
+        }
+    } else {
+        console.log(`[?] Unknown plugin ${pluginName}`);
+    }
+}
+
+// Test if kernel is installed or outdated, and install/update if necessary
+switch (KERNEL.mode) {
+    case "git":
+        try {
+            // Read from <profile>/kernel/INSTALLER_VERSION
+            let kernelVersion = (await fs.readFile(path.join(kernelPath, "INSTALLER_VERSION"))).toString().trim();
+            if (kernelVersion !== KERNEL.commit) {
+                console.log("[i] Mismatched version on kernel, updating...");
+                await installKernel(profilePath, KERNEL);
+            }
+        } catch {
+            console.log("[i] Kernel not found, installing...");
+            await installKernel(profilePath, KERNEL);
+        }
+        break;
+    default:
+        console.log(`[?] Unknown kernel source mode ${KERNEL.mode}, halting...`);
+        process.exit(1);
+}
+
+async function installKernel(profileURL: string, kernelMetadata: SourceMetadata) {
+    // Install kernel directly to <profile>/kernel
+    let kernelPath = path.join(profileURL, "kernel");
+    switch (kernelMetadata.mode) {
+        case "git":
+            console.log(`[i] Cloning kernel from ${kernelMetadata.url} at ${kernelMetadata.commit}...`);
+            await Git.clone({
+                fs,
+                http: GitHTTP,
+                dir: kernelPath,
+                url: kernelMetadata.url,
+                ref: kernelMetadata.commit
+            });
+            console.log("[i] Removing git files...");
+            await fs.rmdir(path.join(kernelPath, ".git"), { recursive: true });
+            console.log("[i] Marking version in module...");
+            await fs.writeFile(path.join(kernelPath, "INSTALLER_VERSION"), kernelMetadata.commit);
+            break;
+        default:
+            console.log(`[?] Unknown kernel source mode ${kernelMetadata.mode}, halting...`);
+            process.exit(1);
+    }
+
+    console.log("[i] Installing kernel dependencies...");
+    await exec("npm install", { cwd: kernelPath });
+
+    console.log("[i] Building kernel...");
+    await exec("npm run build", { cwd: kernelPath });
+
+    console.log("[i] Kernel installed successfully!");
+}
+
+async function installModule(profileURL: string, moduleName: string, moduleMetadata: SourceMetadata) {
     let tempPath = path.join(os.tmpdir(), "installer_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
     console.log(`[i] Installing module ${moduleName}...`);
     switch (moduleMetadata.mode) {
@@ -508,3 +598,42 @@ async function installModule(profileURL: string, moduleName: string, moduleMetad
 
     console.log(`[i] Installed module ${moduleName}.`);
 }
+
+async function installPlugin(profileURL: string, pluginName: string, pluginMetadata: SourceMetadata) {
+    let tempPath = path.join(os.tmpdir(), "installer_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+    console.log(`[i] Installing plugin ${pluginName}...`);
+    switch (pluginMetadata.mode) {
+        case "git":
+            console.log(`[i] Cloning ${pluginName} from ${pluginMetadata.url} at ${pluginMetadata.commit}...`);
+            await Git.clone({
+                fs,
+                http: GitHTTP,
+                dir: tempPath,
+                url: pluginMetadata.url,
+                ref: pluginMetadata.commit
+            });
+            console.log("[i] Removing git files...");
+            await fs.rmdir(path.join(tempPath, ".git"), { recursive: true });
+            console.log("[i] Marking version in plugin...");
+            await fs.writeFile(path.join(tempPath, "INSTALLER_VERSION"), pluginMetadata.commit);
+            break;
+        default:
+            console.log(`[!] Unknown mode ${pluginMetadata.mode} for plugin ${pluginName}`);
+    }
+
+    console.log("[i] Packaging plugin...");
+    let zip = new AdmZip();
+    zip.addLocalFolder(tempPath);
+    await fs.writeFile(path.join(profileURL, "plugins", pluginName + ".zip"), zip.toBuffer());
+
+    console.log("[i] Cleaning up...");
+    await fs.rmdir(tempPath, { recursive: true });
+
+    console.log(`[i] Installed plugin ${pluginName}.`);
+}
+
+// Call CLI and start the bot.
+console.log("[i] Starting C3CBot...");
+fork(cliPath, ["-k", kernelPath, "-l", opts.logLevel, "-g", opts.logLevel, "-u", profilePath], {
+    stdio: "inherit"
+});
