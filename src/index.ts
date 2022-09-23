@@ -540,7 +540,7 @@ async function installKernel(profileURL: string, kernelMetadata: SourceMetadata)
                 ref: kernelMetadata.commit
             });
             console.log("[i] Removing git files...");
-            await fs.rmdir(path.join(kernelPath, ".git"), { recursive: true });
+            await fs.rm(path.join(kernelPath, ".git"), { recursive: true });
             console.log("[i] Marking version in module...");
             await fs.writeFile(path.join(kernelPath, "INSTALLER_VERSION"), kernelMetadata.commit);
             break;
@@ -573,7 +573,7 @@ async function installModule(profileURL: string, moduleName: string, moduleMetad
                 ref: moduleMetadata.commit
             });
             console.log("[i] Removing git files...");
-            await fs.rmdir(path.join(tempPath, ".git"), { recursive: true });
+            await fs.rm(path.join(tempPath, ".git"), { recursive: true });
             console.log("[i] Marking version in module...");
             await fs.writeFile(path.join(tempPath, "INSTALLER_VERSION"), moduleMetadata.commit);
             break;
@@ -595,7 +595,7 @@ async function installModule(profileURL: string, moduleName: string, moduleMetad
             await exec("npm run build", { cwd: tempPath });
 
             console.log("[i] Removing temporary files...");
-            await fs.rmdir(path.join(tempPath, "node_modules"), { recursive: true });
+            await fs.rm(path.join(tempPath, "node_modules"), { recursive: true });
         }
     }
 
@@ -605,7 +605,7 @@ async function installModule(profileURL: string, moduleName: string, moduleMetad
     await fs.writeFile(path.join(profileURL, "modules", moduleName + ".zip"), zip.toBuffer());
 
     console.log("[i] Cleaning up...");
-    await fs.rmdir(tempPath, { recursive: true });
+    await fs.rm(tempPath, { recursive: true });
 
     console.log(`[i] Installed module ${moduleName}.`);
 }
@@ -625,7 +625,7 @@ async function installPlugin(profileURL: string, pluginName: string, pluginMetad
                 ref: pluginMetadata.commit
             });
             console.log("[i] Removing git files...");
-            await fs.rmdir(path.join(tempPath, ".git"), { recursive: true });
+            await fs.rm(path.join(tempPath, ".git"), { recursive: true });
             console.log("[i] Marking version in plugin...");
             await fs.writeFile(path.join(tempPath, "INSTALLER_VERSION"), pluginMetadata.commit);
             break;
@@ -639,7 +639,7 @@ async function installPlugin(profileURL: string, pluginName: string, pluginMetad
     await fs.writeFile(path.join(profileURL, "plugins", pluginName + ".zip"), zip.toBuffer());
 
     console.log("[i] Cleaning up...");
-    await fs.rmdir(tempPath, { recursive: true });
+    await fs.rm(tempPath, { recursive: true });
 
     console.log(`[i] Installed plugin ${pluginName}.`);
 }
