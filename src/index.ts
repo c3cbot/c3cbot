@@ -468,15 +468,20 @@ if (!fsSync.existsSync(configPath)) {
 for (let moduleName in MODULE_TABLE) {
     let modulePath = path.join(profilePath, "modules", moduleName + ".zip");
 
-    if (MODULE_TABLE[moduleName].mode === "git") {
-        let zip = new AdmZip(modulePath);
-        let installerVersion = zip.readAsText("INSTALLER_VERSION").trim();
-        if (installerVersion !== MODULE_TABLE[moduleName].commit) {
-            console.log(`[i] Mismatched version on module ${moduleName}, updating...`);
-            await installModule(profilePath, moduleName, MODULE_TABLE[moduleName]);
+    if (fsSync.existsSync(modulePath)) {
+        if (MODULE_TABLE[moduleName].mode === "git") {
+            let zip = new AdmZip(modulePath);
+            let installerVersion = zip.readAsText("INSTALLER_VERSION").trim();
+            if (installerVersion !== MODULE_TABLE[moduleName].commit) {
+                console.log(`[i] Mismatched version on module ${moduleName}, updating...`);
+                await installModule(profilePath, moduleName, MODULE_TABLE[moduleName]);
+            }
+        } else {
+            console.log(`[?] Unknown module ${moduleName}`);
         }
     } else {
-        console.log(`[?] Unknown module ${moduleName}`);
+        console.log(`[i] Module ${moduleName} not installed, installing...`);
+        await installModule(profilePath, moduleName, MODULE_TABLE[moduleName]);
     }
 }
 
@@ -484,15 +489,20 @@ for (let moduleName in MODULE_TABLE) {
 for (let pluginName in PLUGIN_TABLE) {
     let pluginPath = path.join(profilePath, "plugins", pluginName + ".zip");
 
-    if (PLUGIN_TABLE[pluginName].mode === "git") {
-        let zip = new AdmZip(pluginPath);
-        let installerVersion = zip.readAsText("INSTALLER_VERSION").trim();
-        if (installerVersion !== PLUGIN_TABLE[pluginName].commit) {
-            console.log(`[i] Mismatched version on plugin ${pluginName}, updating...`);
-            await installPlugin(profilePath, pluginName, PLUGIN_TABLE[pluginName]);
+    if (fsSync.existsSync(pluginPath)) {
+        if (PLUGIN_TABLE[pluginName].mode === "git") {
+            let zip = new AdmZip(pluginPath);
+            let installerVersion = zip.readAsText("INSTALLER_VERSION").trim();
+            if (installerVersion !== PLUGIN_TABLE[pluginName].commit) {
+                console.log(`[i] Mismatched version on plugin ${pluginName}, updating...`);
+                await installPlugin(profilePath, pluginName, PLUGIN_TABLE[pluginName]);
+            }
+        } else {
+            console.log(`[?] Unknown plugin ${pluginName}`);
         }
     } else {
-        console.log(`[?] Unknown plugin ${pluginName}`);
+        console.log(`[i] Plugin ${pluginName} not installed, installing...`);
+        await installPlugin(profilePath, pluginName, PLUGIN_TABLE[pluginName]);
     }
 }
 
