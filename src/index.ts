@@ -5,6 +5,54 @@ import fs from "node:fs/promises";
 import fsSync from "node:fs";
 import { createInterface } from "node:readline";
 import crypto from "node:crypto";
+import AdmZip from "adm-zip";
+import * as Git from "isomorphic-git";
+import GitHTTP from 'isomorphic-git/http/node';
+import { Command, Option } from "commander";
+import { exec as execCB } from "node:child_process";
+import { promisify } from "node:util";
+const exec = promisify(execCB);
+
+type ModuleMetadata = {
+    mode: "git",
+    url: string,
+    commit: string
+};
+
+const MODULE_TABLE: {
+    [x: string]: ModuleMetadata
+} = {
+    mod_telegram: {
+        mode: "git",
+        url: "https://github.com/NOCOM-BOT/mod_telegram.git",
+        commit: "df9e79853916c8c45605a762616e3e23cc1e4f48"
+    },
+    mod_discord: {
+        mode: "git",
+        url: "https://github.com/NOCOM-BOT/mod_discord.git",
+        commit: "2c8f13375c0bce0fbb48a70e7e1535c51059a6ec"
+    },
+    mod_fbmsg_legacy: {
+        mode: "git",
+        url: "https://github.com/NOCOM-BOT/mod_fbmsg_legacy.git",
+        commit: "4d9ce388dcc2853ac913ee03ddde700a1a49b043"
+    },
+    mod_database_json: {
+        mode: "git",
+        url: "https://github.com/NOCOM-BOT/mod_database_json.git",
+        commit: "11765c5cd865af8e9ba62d749d6d79f37d54a594"
+    },
+    mod_pluginhandler_a: {
+        mode: "git",
+        url: "https://github.com/NOCOM-BOT/mod_pluginhandler_a.git",
+        commit: "377d0c0bedcc465baa6abf627c4189c147979648"
+    },
+    mod_command_handler: {
+        mode: "git",
+        url: "https://github.com/NOCOM-BOT/mod_command_handler.git",
+        commit: "9e3df08dcf313f38ba529481aea0b0e118e246d7"
+    }
+}
 
 const rl = createInterface({
     input: process.stdin,
@@ -12,7 +60,6 @@ const rl = createInterface({
     prompt: ""
 });
 
-import { Command, Option } from "commander";
 const program = new Command("c3cbot");
 
 program
@@ -64,6 +111,12 @@ if (!fsSync.existsSync(pluginPath)) {
 const dataPath = path.join(profilePath, "data");
 if (!fsSync.existsSync(dataPath)) {
     await fs.mkdir(dataPath);
+}
+
+// Create temp directory if it doesn't exist
+const tempPath = path.join(profilePath, "temp");
+if (!fsSync.existsSync(tempPath)) {
+    await fs.mkdir(tempPath);
 }
 
 // Test config.json
@@ -387,4 +440,71 @@ if (!fsSync.existsSync(configPath)) {
         },
         operators
     }));
+}
+
+// Test if module is installed or outdated, and install/update if necessary
+for (let moduleName in MODULE_TABLE) {
+    let modulePath = path.join(profilePath, "modules", moduleName + ".zip");
+
+    if (MODULE_TABLE[moduleName].mode === "git") {
+        let zip = new AdmZip(modulePath);
+        let installerVersion = zip.readAsText("INSTALLER_VERSION").trim();
+        if (installerVersion !== MODULE_TABLE[moduleName].commit) {
+            console.log(`[i] Mismatched version on ${moduleName}, updating...`);
+            await installModule(profilePath, moduleName, MODULE_TABLE[moduleName]);
+        }
+    } else {
+        console.log(`[?] Unknown module ${moduleName}`);
+    }
+}
+
+async function installModule(profileURL: string, moduleName: string, moduleMetadata: ModuleMetadata) {
+    let tempPath = path.join(os.tmpdir(), "installer_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15));
+    console.log(`[i] Installing module ${moduleName}...`);
+    switch (moduleMetadata.mode) {
+        case "git":
+            console.log(`[i] Cloning ${moduleName} from ${moduleMetadata.url} at ${moduleMetadata.commit}...`);
+            await Git.clone({
+                fs,
+                http: GitHTTP,
+                dir: tempPath,
+                url: moduleMetadata.url,
+                ref: moduleMetadata.commit
+            });
+            console.log("[i] Removing git files...");
+            await fs.rmdir(path.join(tempPath, ".git"), { recursive: true });
+            console.log("[i] Marking version in module...");
+            await fs.writeFile(path.join(tempPath, "INSTALLER_VERSION"), moduleMetadata.commit);
+            break;
+        default:
+            console.log(`[!] Unknown mode ${moduleMetadata.mode} for module ${moduleName}`);
+    }
+
+    // Read module.json and determine if it needs compiling.
+    let moduleJSON = JSON.parse(await fs.readFile(path.join(tempPath, "module.json"), "utf8"));
+    if (moduleJSON.type === "package") {
+        // Read package.json and check if there's "build" command.
+        let packageJSON = JSON.parse(await fs.readFile(path.join(tempPath, "package.json"), "utf8"));
+        if (packageJSON.scripts && packageJSON.scripts.build) {
+            // This package needs compiling.
+            console.log("[i] Installing dependencies...");
+            await exec("npm install", { cwd: tempPath });
+
+            console.log("[i] Compiling...");
+            await exec("npm run build", { cwd: tempPath });
+
+            console.log("[i] Removing temporary files...");
+            await fs.rmdir(path.join(tempPath, "node_modules"), { recursive: true });
+        }
+    }
+
+    console.log("[i] Packaging module...");
+    let zip = new AdmZip();
+    zip.addLocalFolder(tempPath);
+    await fs.writeFile(path.join(profileURL, "modules", moduleName + ".zip"), zip.toBuffer());
+
+    console.log("[i] Cleaning up...");
+    await fs.rmdir(tempPath, { recursive: true });
+
+    console.log(`[i] Installed module ${moduleName}.`);
 }

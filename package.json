@@ -25,12 +25,15 @@
   "homepage": "https://github.com/c3cbot/c3cbot#readme",
   "devDependencies": {
     "@tsconfig/node18": "^1.0.1",
+    "@types/adm-zip": "^0.5.0",
     "@types/node": "^18.7.18",
     "typescript": "^4.8.3"
   },
   "dependencies": {
     "@nocom_bot/cli": "^0.0.8",
-    "commander": "^9.4.0"
+    "adm-zip": "^0.5.9",
+    "commander": "^9.4.0",
+    "isomorphic-git": "^1.21.0"
   },
   "type": "module",
   "bin": {
