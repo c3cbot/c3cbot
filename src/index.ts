@@ -381,6 +381,9 @@ if (!fsSync.existsSync(configPath)) {
         }
     }
 
+    console.log("Added account!");
+    console.log();
+
     // Yes/No question: Do you want to add operators?
     let addOperators = (await new Promise<boolean>(function rec(resolve) {
         rl.question("Do you want to add operators? (y/n): ", (answer) => {
@@ -556,6 +559,7 @@ async function installKernel(profileURL: string, kernelMetadata: SourceMetadata)
     await exec("npm run build", { cwd: kernelPath });
 
     console.log("[i] Kernel installed successfully!");
+    console.log();
 }
 
 async function installModule(profileURL: string, moduleName: string, moduleMetadata: SourceMetadata) {
@@ -608,6 +612,7 @@ async function installModule(profileURL: string, moduleName: string, moduleMetad
     await fs.rm(tempPath, { recursive: true });
 
     console.log(`[i] Installed module ${moduleName}.`);
+    console.log();
 }
 
 async function installPlugin(profileURL: string, pluginName: string, pluginMetadata: SourceMetadata) {
@@ -642,10 +647,16 @@ async function installPlugin(profileURL: string, pluginName: string, pluginMetad
     await fs.rm(tempPath, { recursive: true });
 
     console.log(`[i] Installed plugin ${pluginName}.`);
+    console.log();
 }
 
 // Call CLI and start the bot.
 console.log("[i] Starting C3CBot...");
-fork(cliPath, ["-k", kernelPath, "-l", opts.logLevel, "-g", opts.logLevel, "-u", profilePath], {
+console.log();
+let cliProcess = fork(cliPath, ["-k", kernelPath, "-l", opts.logLevel, "-g", opts.logLevel, "-u", profilePath], {
     stdio: "inherit"
+});
+
+cliProcess.on("exit", (code) => {
+    process.exit(code ?? 0);
 });
