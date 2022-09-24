@@ -41,7 +41,7 @@ const MODULE_TABLE: {
     mod_fbmsg_legacy: {
         mode: "git",
         url: "https://github.com/NOCOM-BOT/mod_fbmsg_legacy.git",
-        commit: "4d9ce388dcc2853ac913ee03ddde700a1a49b043"
+        commit: "f40da5f8df5ecbe03443083ab6415d9584b3acbb"
     },
     mod_database_json: {
         mode: "git",
