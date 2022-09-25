@@ -66,7 +66,7 @@ const PLUGIN_TABLE: {
     C3CBotInternal: {
         mode: "git",
         url: "https://github.com/c3cbot/c3cbot_internal_plugin.git",
-        commit: "ceb1a7ed8950a6c7e718ea6a2c45ff8e7adaf51e"
+        commit: "c5a06995ed62adc8ee4c83234e1c99a268fe9ec7"
     }
 }
 
