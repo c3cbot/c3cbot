@@ -51,7 +51,7 @@ const MODULE_TABLE: {
     mod_pluginhandler_a: {
         mode: "git",
         url: "https://github.com/NOCOM-BOT/mod_pluginhandler_a.git",
-        commit: "377d0c0bedcc465baa6abf627c4189c147979648"
+        commit: "199118a9eea77e54894a1fa8cdf49db00814a32b"
     },
     mod_command_handler: {
         mode: "git",
