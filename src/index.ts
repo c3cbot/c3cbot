@@ -22,7 +22,7 @@ type SourceMetadata = {
 const KERNEL: SourceMetadata = {
     mode: "git",
     url: "https://github.com/NOCOM-BOT/core.git",
-    commit: "c9f099381895e18ee20359e9c93870767e137d13"
+    commit: "d5bbd9433e5d2f81532e5530d142090959272bb9"
 }
 
 const MODULE_TABLE: {
@@ -66,7 +66,7 @@ const PLUGIN_TABLE: {
     C3CBotInternal: {
         mode: "git",
         url: "https://github.com/c3cbot/c3cbot_internal_plugin.git",
-        commit: "c5a06995ed62adc8ee4c83234e1c99a268fe9ec7"
+        commit: "b9315da3883f9aa28644d9761bfe28173345eb24"
     }
 }
 
