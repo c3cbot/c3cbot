@@ -345,7 +345,7 @@ if (!fsSync.existsSync(configPath)) {
 
             // Add account to accounts array
             accounts.push({
-                shortName: "int_facebook",
+                shortName: "int_fbmsg_legacy",
                 loginData: {
                     ...(addEmailPasswordFallback ? {
                         email,
