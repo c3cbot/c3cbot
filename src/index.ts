@@ -51,7 +51,7 @@ const MODULE_TABLE: {
     mod_pluginhandler_a: {
         mode: "git",
         url: "https://github.com/NOCOM-BOT/mod_pluginhandler_a.git",
-        commit: "693ac3f712d6163a716ec45ad0f21b93c717120d"
+        commit: "276d91d4755feb698a6fce9fc6de478ea5d7801e"
     },
     mod_command_handler: {
         mode: "git",
@@ -66,7 +66,7 @@ const PLUGIN_TABLE: {
     C3CBotInternal: {
         mode: "git",
         url: "https://github.com/c3cbot/c3cbot_internal_plugin.git",
-        commit: "b9315da3883f9aa28644d9761bfe28173345eb24"
+        commit: "5ab931718ff8d64fc0aefa30b02cff8d1e7dade0"
     }
 }
 
