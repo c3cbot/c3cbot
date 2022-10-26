@@ -22,7 +22,7 @@ type SourceMetadata = {
 const KERNEL: SourceMetadata = {
     mode: "git",
     url: "https://github.com/NOCOM-BOT/core.git",
-    commit: "d5bbd9433e5d2f81532e5530d142090959272bb9"
+    commit: "df9a33ecf3e5d2b7051cbcfc517c036168b66585"
 }
 
 const MODULE_TABLE: {
