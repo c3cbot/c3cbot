@@ -48,7 +48,7 @@ const MODULE_TABLE: {
     mod_database_json: {
         mode: "git",
         url: "https://github.com/NOCOM-BOT/mod_database_json.git",
-        commit: "11765c5cd865af8e9ba62d749d6d79f37d54a594"
+        commit: "a1105e3a22ff5a09f0342bf317b24666c68fde9b"
     },
     mod_pluginhandler_a: {
         mode: "git",
@@ -91,9 +91,9 @@ program
             .choices(["silent", "critical", "error", "warn", "info", "debug", "verbose"])
             .env("C3CBOT_LOG_LEVEL").default("info")
     )
-    /*.addOption(
+    .addOption(
         new Option("-s, --setup", "Initialize setup process, useful when you want to change settings")
-    )*/;
+    );
 
 program.parse(process.argv);
 
@@ -145,9 +145,9 @@ if (!fsSync.existsSync(kernelPath)) {
 
 // Test config.json
 const configPath = path.join(profilePath, "config.json");
-if (!fsSync.existsSync(configPath)) {
+if (!fsSync.existsSync(configPath) || opts.setup) {
     // Config file doesn't exist, starting interactive setup
-    console.log("Config file doesn't exist, starting setup...");
+    if (!opts.setup) console.log("Config file doesn't exist, starting setup...");
 
     let accounts = [];
     console.log("Please add an account for C3CBot to use.");
