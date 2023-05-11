@@ -22,7 +22,7 @@ type SourceMetadata = {
 const KERNEL: SourceMetadata = {
     mode: "git",
     url: "https://github.com/NOCOM-BOT/core.git",
-    commit: "df9a33ecf3e5d2b7051cbcfc517c036168b66585"
+    commit: "11dca0fd6621ee1a4c9a0e34a825b426b455b4c2"
 }
 
 const MODULE_TABLE: {
@@ -465,6 +465,9 @@ if (!fsSync.existsSync(configPath)) {
         },
         operators
     }));
+
+    console.log("[i] Successfully wrote config file!\n");
+    console.log(`[i] Note: You might experience slow boot time during first run. After that boot time will be much faster.`);
 }
 
 // Test if module is installed or outdated, and install/update if necessary
@@ -532,6 +535,12 @@ switch (KERNEL.mode) {
 async function installKernel(profileURL: string, kernelMetadata: SourceMetadata) {
     // Install kernel directly to <profile>/kernel
     let kernelPath = path.join(profileURL, "kernel");
+
+    // Remove existing kernel
+    if (fsSync.existsSync(kernelPath)) {
+        await fs.rm(kernelPath, { recursive: true });
+    }
+
     switch (kernelMetadata.mode) {
         case "git":
             console.log(`[i] Cloning kernel from ${kernelMetadata.url} at ${kernelMetadata.commit}...`);
@@ -540,7 +549,8 @@ async function installKernel(profileURL: string, kernelMetadata: SourceMetadata)
                 http: GitHTTP,
                 dir: kernelPath,
                 url: kernelMetadata.url,
-                ref: kernelMetadata.commit
+                ref: kernelMetadata.commit,
+                depth: 1
             });
             console.log("[i] Removing git files...");
             await fs.rm(path.join(kernelPath, ".git"), { recursive: true });
@@ -574,7 +584,8 @@ async function installModule(profileURL: string, moduleName: string, moduleMetad
                 http: GitHTTP,
                 dir: tempPath,
                 url: moduleMetadata.url,
-                ref: moduleMetadata.commit
+                ref: moduleMetadata.commit,
+                depth: 1
             });
             console.log("[i] Removing git files...");
             await fs.rm(path.join(tempPath, ".git"), { recursive: true });
@@ -627,7 +638,8 @@ async function installPlugin(profileURL: string, pluginName: string, pluginMetad
                 http: GitHTTP,
                 dir: tempPath,
                 url: pluginMetadata.url,
-                ref: pluginMetadata.commit
+                ref: pluginMetadata.commit,
+                depth: 1
             });
             console.log("[i] Removing git files...");
             await fs.rm(path.join(tempPath, ".git"), { recursive: true });
@@ -659,4 +671,21 @@ let cliProcess = fork(cliPath, ["-k", kernelPath, "-l", opts.logLevel, "-g", opt
 
 cliProcess.on("exit", (code) => {
     process.exit(code ?? 0);
+});
+
+process.on("SIGINT", () => {
+    // pass to child process
+    cliProcess.kill("SIGINT");
+});
+
+process.on("SIGTERM", () => {
+    cliProcess.kill("SIGTERM");
+});
+
+process.on("SIGKILL", () => {
+    cliProcess.kill("SIGKILL");
+});
+
+process.on("exit", () => {
+    cliProcess.kill("SIGKILL");
 });
