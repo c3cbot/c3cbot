@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import cliPath from "@nocom_bot/cli";
 import os from "node:os";
 import path from "node:path";
