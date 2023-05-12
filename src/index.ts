@@ -24,7 +24,7 @@ type SourceMetadata = {
 const KERNEL: SourceMetadata = {
     mode: "git",
     url: "https://github.com/NOCOM-BOT/core.git",
-    commit: "11dca0fd6621ee1a4c9a0e34a825b426b455b4c2"
+    commit: "35d5a6a90a2dd86ff07f422fb9120594ef955317"
 }
 
 const MODULE_TABLE: {
@@ -33,12 +33,12 @@ const MODULE_TABLE: {
     mod_telegram: {
         mode: "git",
         url: "https://github.com/NOCOM-BOT/mod_telegram.git",
-        commit: "df9e79853916c8c45605a762616e3e23cc1e4f48"
+        commit: "ec46dc5d6e1a3a511758bfb8983dbc04c51e3b92"
     },
     mod_discord: {
         mode: "git",
         url: "https://github.com/NOCOM-BOT/mod_discord.git",
-        commit: "2c8f13375c0bce0fbb48a70e7e1535c51059a6ec"
+        commit: "a19fe02436ea572264af6ff9315e5788fb9a2c13"
     },
     mod_fbmsg_legacy: {
         mode: "git",
@@ -58,7 +58,7 @@ const MODULE_TABLE: {
     mod_command_handler: {
         mode: "git",
         url: "https://github.com/NOCOM-BOT/mod_command_handler.git",
-        commit: "9e3df08dcf313f38ba529481aea0b0e118e246d7"
+        commit: "5b7823599632cc6c0612f9ed74a2f3da60ec20d4"
     }
 }
 
@@ -68,7 +68,7 @@ const PLUGIN_TABLE: {
     C3CBotInternal: {
         mode: "git",
         url: "https://github.com/c3cbot/c3cbot_internal_plugin.git",
-        commit: "5ab931718ff8d64fc0aefa30b02cff8d1e7dade0"
+        commit: "638f38ad084203eec676d90581b9a24f4d76613d"
     }
 }
 
@@ -360,7 +360,7 @@ if (!fsSync.existsSync(configPath) || opts.setup) {
             });
         } else {
             // Invalid account type
-            console.log("Invalid account type, please try again.");
+            console.log("Invalid account type, please try again (select only ONE).");
             continue;
         }
 
@@ -441,6 +441,38 @@ if (!fsSync.existsSync(configPath) || opts.setup) {
         }
     }
 
+    let defaultLang = (await new Promise<string>((resolve) => {
+        rl.question("Default bot language (if user language is not detected) (default: en-US, leave blank if select this): ", (answer) => {
+            resolve(answer);
+        });
+    })).trim() || "en-US";
+
+    let commandLogging = (await new Promise<boolean>(function rec(resolve) {
+        rl.question("Do you want to enable command exection logging (default behavior in 0.x)? (y/n): ", (answer) => {
+            if (answer.trim().toLowerCase() === "y") {
+                resolve(true);
+            } else if (answer.trim().toLowerCase() === "n") {
+                resolve(false);
+            } else {
+                console.log("Invalid answer, please try again.");
+                rec(resolve);
+            }
+        });
+    }));
+
+    let messageLogging = (await new Promise<boolean>(function rec(resolve) {
+        rl.question("Do you want to enable general message logging (default behavior in 0.x)? (y/n): ", (answer) => {
+            if (answer.trim().toLowerCase() === "y") {
+                resolve(true);
+            } else if (answer.trim().toLowerCase() === "n") {
+                resolve(false);
+            } else {
+                console.log("Invalid answer, please try again.");
+                rec(resolve);
+            }
+        });
+    }));
+
     // Add ID in accounts 
     for (let i = 0; i < accounts.length; i++) {
         accounts[i].id = i;
@@ -462,7 +494,9 @@ if (!fsSync.existsSync(configPath) || opts.setup) {
         crashOnDefaultDatabaseFail: true,
         moduleConfig: {
             command_handler: {
-                language: "en-US"
+                language: defaultLang,
+                logMessageToConsole: messageLogging,
+                logCommandToConsole: commandLogging
             }
         },
         operators
